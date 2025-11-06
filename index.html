@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muzokara forma</title>
+    <style>
+        body { 
+            font-family: 'Tilda Sans', Arial, sans-serif; 
+            margin: 0; 
+            padding: 90px 20px; 
+            background: #f9f9f9; 
+            color: #333;
+        }
+        .quiz-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 30px 40px -10px rgba(0,0,0,0.1); 
+            overflow: hidden;
+            height: 500px;
+            position: relative;
+        }
+        .progress-bar { 
+            background: rgba(82,87,222,0.20); 
+            height: 4px; 
+            border-radius: 2px; 
+        }
+        .progress { 
+            background: #5257de; 
+            height: 100%; 
+            border-radius: 2px; 
+            transition: width 0.3s ease-in-out; 
+            width: 0%; 
+        }
+        .step { 
+            display: none; 
+            padding: 20px; 
+            height: calc(500px - 120px); 
+            overflow-y: auto;
+        }
+        .step.active { display: block; }
+        .input-group { margin-bottom: 20px; }
+        .input-title { 
+            font-size: clamp(16px, 2.5vw, 24px); 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+            color: #333; 
+        }
+        .radio-wrapper { display: flex; flex-direction: column; gap: 8px; }
+        .radio-item { 
+            display: flex; 
+            align-items: center; 
+            background: #f5f5f5; 
+            padding: 12px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: background 0.2s;
+        }
+        .radio-item:hover { background: #e9e9e9; }
+        .radio-item input[type="radio"] { 
+            margin-right: 12px; 
+            accent-color: #5257de;
+            display: none;
+        }
+        .radio-indicator { 
+            width: 18px; 
+            height: 18px; 
+            border: 2px solid #5257de; 
+            border-radius: 50%; 
+            margin-right: 12px; 
+            position: relative;
+            flex-shrink: 0;
+        }
+        .radio-indicator:after { 
+            content: ''; 
+            width: 8px; 
+            height: 8px; 
+            background: #5257de; 
+            border-radius: 50%; 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            opacity: 0; 
+            transition: opacity 0.2s; 
+        }
+        .radio-item input:checked + .radio-indicator:after { opacity: 1; }
+        input[type="text"], input[type="tel"] { 
+            width: 100%; 
+            padding: 12px; 
+            border: none; 
+            background: #f5f5f5; 
+            border-radius: 4px; 
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .own-variant-input { display: none; width: 200px; margin-left: 10px; }
+        .radio-item input[value="Boshqa"]:checked + .radio-indicator ~ .own-variant-input { display: block; }
+        .contact-header { 
+            font-size: clamp(20px, 3vw, 36px); 
+            margin-bottom: 20px; 
+            text-align: center;
+        }
+        .btn-wrapper { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 20px; 
+            background: rgba(255,255,255,0.95);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        .btn { 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: all 0.2s ease-in-out;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-prev { 
+            background: #dddfff; 
+            color: #7579ed; 
+            border: 1px solid #dddfff; 
+        }
+        .btn-next, .btn-submit { 
+            background: linear-gradient(0.249turn, rgba(134,137,242,1) 0%, rgba(82,87,222,1) 100%); 
+            color: white; 
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .error { color: red; font-size: 14px; margin-top: 5px; display: none; }
+        .success { 
+            display: none; 
+            text-align: center; 
+            padding: 40px; 
+            font-size: 18px; 
+            color: green;
+        }
+        .counter { 
+            font-size: 12px; 
+            color: #666; 
+            margin-bottom: 10px; 
+            text-align: right;
+        }
+        @media (max-width: 640px) { 
+            body { padding: 20px 10px; }
+            .quiz-container { height: auto; min-height: 500px; border-radius: 0; }
+            .step { height: auto; padding: 15px; }
+            .btn-wrapper { position: relative; background: white; border-top: 1px solid #eee; }
+            .radio-item { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <!-- 1-bosqich: Yaxshilash -->
+        <div class="step active" data-step="1">
+            <div class="counter" id="counter1">1-qadam / 5</div>
+            <div class="input-group">
+                <div class="input-title">Nutqingizda yaxshilashni <br> xohlaydigan jihatlar <br> bormi?</div>
+                <div class="radio-wrapper">
+                    <label class="radio-item">
+                        <input type="radio" name="yaxshilash" value="Bor" required>
+                        <span class="radio-indicator"></span>
+                        <span>Bor</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="yaxshilash" value="Yoq" required>
+                        <span class="radio-indicator"></span>
+                        <span>Yoq</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="yaxshilash" value="Bilmayman" required>
+                        <span class="radio-indicator"></span>
+                        <span>Bilmayman</span>
+                    </label>
+                </div>
+                <div class="error" id="error1">Bu maydonni to'ldiring</div>
+            </div>
+        </div>
+
+        <!-- 2-bosqich: Jihatlar (faqat "Bor" uchun) -->
+        <div class="step" data-step="2">
+            <div class="counter" id="counter2">2-qadam / 5</div>
+            <div class="input-group">
+                <div class="input-title">Nutqingizdagi qaysi jihatlarni yaxshilamoqchisiz?</div>
+                <input style="outline: none;" type="text" name="jihatlar" id="jihatlar" required placeholder="Yozing...">
+                <div class="error" id="error2">Bu maydonni to'ldiring</div>
+            </div>
+        </div>
+
+        <!-- 3-bosqich: Faoliyat -->
+        <div class="step" data-step="3">
+            <div class="counter" id="counter3">3-qadam / 5</div>
+            <div class="input-group">
+                <div class="input-title">Faoliyat yo'nalishingiz?</div>
+                <div class="radio-wrapper">
+                    <label class="radio-item">
+                        <input type="radio" name="faoliyat" value="Biznes egasi" required>
+                        <span class="radio-indicator"></span>
+                        <span>Biznes egasi</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="faoliyat" value="Kichik tadbirkor" required>
+                        <span class="radio-indicator"></span>
+                        <span>Kichik tadbirkor</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="faoliyat" value="Advokat" required>
+                        <span class="radio-indicator"></span>
+                        <span>Advokat</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="faoliyat" value="Rahbar" required>
+                        <span class="radio-indicator"></span>
+                        <span>Rahbar</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="faoliyat" value="Oqituvchi" required>
+                        <span class="radio-indicator"></span>
+                        <span>Oqituvchi</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="faoliyat" value="Shifokor" required>
+                        <span class="radio-indicator"></span>
+                        <span>Shifokor</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="faoliyat" value="Talaba" required>
+                        <span class="radio-indicator"></span>
+                        <span>Talaba</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="faoliyat" value="Boshqa" required>
+                        <span class="radio-indicator"></span>
+                        <span>Boshqa:</span>
+                        <input type="text" class="own-variant-input" name="faoliyat-other" placeholder="Yozing...">
+                    </label>
+                </div>
+                <div class="error" id="error3">Bu maydonni to'ldiring</div>
+            </div>
+        </div>
+
+        <!-- 4-bosqich: Viloyat -->
+        <div class="step" data-step="4">
+            <div class="counter" id="counter4">4-qadam / 5</div>
+            <div class="input-group">
+                <div class="input-title">Qaysi viloyatdan murojaat qilyapsiz?</div>
+                <div class="radio-wrapper">
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Andijon" required><span class="radio-indicator"></span><span>Andijon</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Buxoro" required><span class="radio-indicator"></span><span>Buxoro</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Jizzax" required><span class="radio-indicator"></span><span>Jizzax</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Qashqadaryo" required><span class="radio-indicator"></span><span>Qashqadaryo</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Navoiy" required><span class="radio-indicator"></span><span>Navoiy</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Namangan" required><span class="radio-indicator"></span><span>Namangan</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Samarqand" required><span class="radio-indicator"></span><span>Samarqand</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Sirdaryo" required><span class="radio-indicator"></span><span>Sirdaryo</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Surxondaryo" required><span class="radio-indicator"></span><span>Surxondaryo</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Toshkent" required><span class="radio-indicator"></span><span>Toshkent</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Fargʻona" required><span class="radio-indicator"></span><span>Fargʻona</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Xorazm" required><span class="radio-indicator"></span><span>Xorazm</span></label>
+                </div>
+                <div class="error" id="error4">Bu maydonni to'ldiring</div>
+            </div>
+        </div>
+
+        <!-- 5-bosqich: Kontakt -->
+        <div class="step" data-step="5">
+            <div class="counter" id="counter5">5-qadam / 5</div>
+            <div class="input-group">
+                <div class="contact-header">Ma'lumotlaringizni qoldiring</div>
+                <div class="input-group">
+                    <div class="input-title">Ismingiz</div>
+                    <input type="text" name="name" required placeholder="Ismingizni kiriting">
+                    <div class="error" id="error-name">Ism faqat harflardan iborat bo'lishi kerak</div>
+                </div>
+                <div class="input-group">
+                    <div class="input-title">Telefon raqamingiz</div>
+                    <input type="tel" name="phone" id="phone" required placeholder="+998 (xx) xxx-xx-xx">
+                    <div class="error" id="error-phone">To'g'ri telefon raqam kiriting</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success -->
+        <div class="step success active" id="success-step" style="display: none;">
+            <div style="padding: 40px; text-align: center; background-color: green;">
+                <div style="font-size: 18px; color: white; margin-bottom: 20px;">Malumotlaringiz muvaffaqiyatli qabul qilindi!</div>
+            </div>
+        </div>
+
+        <form id="quiz-form">
+            <div class="btn-wrapper">
+                <button type="button" class="btn btn-prev" id="btn-prev" onclick="prevStep()" style="display: none;">
+                    ← Orqaga
+                </button>
+                <button type="button" class="btn btn-next" id="btn-next" onclick="nextStep()">
+                    Keyingisi →
+                </button>
+                <button type="submit" class="btn btn-submit" id="btn-submit" style="display: none;">
+                    Yuborish
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+        const form = document.getElementById('quiz-form');
+        const steps = document.querySelectorAll('.step[data-step]');
+        const progress = document.getElementById('progress');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const btnSubmit = document.getElementById('btn-submit');
+        const successStep = document.getElementById('success-step');
+
+        function updateProgress() {
+            const percent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            progress.style.width = percent + '%';
+            document.querySelectorAll('.counter').forEach((counter, index) => {
+                if (index + 1 === currentStep) counter.textContent = `${currentStep}-qadam / ${totalSteps}`;
+            });
+        }
+
+        function showStep(stepNum) {
+            steps.forEach(s => s.classList.remove('active'));
+            document.querySelector(`[data-step="${stepNum}"]`).classList.add('active');
+            btnPrev.style.display = stepNum > 1 ? 'flex' : 'none';
+            btnNext.style.display = stepNum < totalSteps ? 'flex' : 'none';
+            btnSubmit.style.display = stepNum === totalSteps ? 'flex' : 'none';
+            updateProgress();
+            // Scroll to top if needed
+            window.scrollTo(0, 0);
+        }
+
+        function validateStep(stepNum) {
+            const step = document.querySelector(`[data-step="${stepNum}"]`);
+            const errors = step.querySelectorAll('.error');
+            errors.forEach(e => e.style.display = 'none');
+            let valid = true;
+
+            // Required fields
+            const requireds = step.querySelectorAll('[required]');
+            requireds.forEach(input => {
+                if (!input.value.trim()) {
+                    valid = false;
+                    const error = input.closest('.input-group').querySelector('.error');
+                    if (error) {
+                        error.style.display = 'block';
+                        error.textContent = 'Bu maydonni to\'ldiring';
+                    }
+                }
+            });
+
+            // Name validation (only letters)
+            if (stepNum === 5) {
+                const name = document.querySelector('[name="name"]').value;
+                if (name && !/^[a-zA-Z\u0400-\u04FF\s]+$/.test(name)) {
+                    valid = false;
+                    document.getElementById('error-name').style.display = 'block';
+                }
+                // Phone validation
+                const phone = document.getElementById('phone').value;
+                if (phone && !/^(\+998|998)?[\s-]?\(?[0-9]{2}\)?[\s-]?[0-9]{3}[\s-]?[0-9]{2}[\s-]?[0-9]{2}$/.test(phone.replace(/\s/g, ''))) {
+                    valid = false;
+                    document.getElementById('error-phone').style.display = 'block';
+                }
+            }
+
+            // Faoliyat other
+            if (stepNum === 3) {
+                const otherRadio = document.querySelector('input[name="faoliyat"][value="Boshqa"]:checked');
+                if (otherRadio && !otherRadio.nextElementSibling.nextElementSibling.value.trim()) {
+                    valid = false;
+                    document.getElementById('error3').style.display = 'block';
+                    document.getElementById('error3').textContent = 'Boshqa variantni kiriting';
+                }
+            }
+
+            return valid;
+        }
+
+        function nextStep() {
+            if (validateStep(currentStep)) {
+                // Conditional for step 1
+                if (currentStep === 1) {
+                    const selected = document.querySelector('input[name="yaxshilash"]:checked')?.value;
+                    if (selected !== 'Bor') {
+                        currentStep = 3; // Skip step 2
+                    } else {
+                        currentStep = 2;
+                    }
+                } else {
+                    currentStep++;
+                }
+                showStep(currentStep);
+            }
+        }
+
+        function prevStep() {
+            if (currentStep === 3 && document.querySelector('input[name="yaxshilash"]:checked')?.value === 'Bor') {
+                currentStep = 2; // Go back to step 2 if "Bor" was selected
+            } else {
+                currentStep--;
+            }
+            showStep(currentStep);
+        }
+
+        // Phone mask for UZ
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let val = e.target.value.replace(/\D/g, '');
+            let formatted = '';
+            if (val.length >= 1) {
+                if (val.startsWith('998')) {
+                    val = val.substring(3);
+                }
+                if (val.length > 9) val = val.substring(0, 9);
+                formatted = '+998 ';
+                if (val.length >= 1) formatted += '(' + val.substring(0, 2) + ') ';
+                if (val.length >= 3) formatted += val.substring(2, 5) + ' ';
+                if (val.length >= 5) formatted += val.substring(5, 7) + ' ';
+                if (val.length >= 7) formatted += val.substring(7, 9);
+            }
+            e.target.value = formatted;
+        });
+
+        // Form submit
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (validateStep(totalSteps)) {
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData);
+                // Simulate submission (o'zing backend URL ni qo'y: fetch('https://your-backend.com/submit', {method: 'POST', body: formData}))
+                console.log('Yuborilgan ma\'lumotlar:', data);
+                // Original link ga bog'lash uchun: window.open('https://najotnurtelegram.tilda.ws/forma', '_blank'); yoki redirect
+                steps.forEach(s => s.classList.remove('active'));
+                successStep.style.display = 'block';
+                successStep.classList.add('active');
+                form.reset();
+            }
+        });
+
+        function resetForm() {
+            currentStep = 1;
+            successStep.style.display = 'none';
+            successStep.classList.remove('active');
+            showStep(1);
+            form.reset();
+        }
+
+        // Initial load animation
+        setTimeout(() => {
+            document.body.style.opacity = '1';
+        }, 100);
+
+        // Radio indicators
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'radio') {
+                // Update indicators
+                const wrapper = e.target.closest('.radio-wrapper');
+                wrapper.querySelectorAll('.radio-indicator').forEach(ind => {
+                    ind.style.opacity = '0';
+                });
+                if (e.target.checked) {
+                    e.target.parentElement.querySelector('.radio-indicator').style.opacity = '1';
+                }
+                // Show/hide other input
+                if (e.target.value === 'Boshqa') {
+                    e.target.closest('.radio-item').querySelector('.own-variant-input').style.display = 'block';
+                }
+            }
+        });
+
+        showStep(1);
+    </script>
+</body>
+</html>
