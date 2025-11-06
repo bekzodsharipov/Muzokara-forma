@@ -1,174 +1,381 @@
 <!DOCTYPE html>
 <html lang="uz">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Muzokara forma</title>
     <style>
-        body { 
-            font-family: 'Tilda Sans', Arial, sans-serif; 
-            margin: 0; 
-            padding: 90px 20px; 
-            background: #f9f9f9; 
+        body {
+            font-family: 'Tilda Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 90px 20px;
+            background: #f9f9f9;
             color: #333;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
         }
-        .quiz-container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background: white; 
-            border-radius: 12px; 
-            box-shadow: 0 30px 40px -10px rgba(0,0,0,0.1); 
+
+        body.loaded {
+            opacity: 1;
+        }
+
+        .quiz-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 30px 40px -10px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             height: 500px;
             position: relative;
+            border: 1px solid #f0f0f0;
         }
-        .progress-bar { 
-            background: rgba(82,87,222,0.20); 
-            height: 4px; 
-            border-radius: 2px; 
+
+        .progress-bar {
+            background: rgba(82, 87, 222, 0.20);
+            height: 4px;
+            border-radius: 0;
         }
-        .progress { 
-            background: #5257de; 
-            height: 100%; 
-            border-radius: 2px; 
-            transition: width 0.3s ease-in-out; 
-            width: 0%; 
+
+        .progress {
+            background: #5257de;
+            height: 100%;
+            border-radius: 0;
+            transition: width 0.3s ease-in-out;
+            width: 0%;
         }
-        .step { 
-            display: none; 
-            padding: 20px; 
-            height: calc(500px - 120px); 
-            overflow-y: auto;
-        }
-        .step.active { display: block; }
-        .input-group { margin-bottom: 20px; }
-        .input-title { 
-            font-size: clamp(16px, 2.5vw, 24px); 
-            font-weight: bold; 
-            margin-bottom: 15px; 
-            color: #333; 
-        }
-        .radio-wrapper { display: flex; flex-direction: column; gap: 8px; }
-        .radio-item { 
-            display: flex; 
-            align-items: center; 
-            background: #f5f5f5; 
-            padding: 12px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            transition: background 0.2s;
-        }
-        .radio-item:hover { background: #e9e9e9; }
-        .radio-item input[type="radio"] { 
-            margin-right: 12px; 
-            accent-color: #5257de;
+
+        .step {
             display: none;
+            padding: 30px 20px 0;
+            height: calc(500px - 120px);
+            overflow-y: auto;
+            position: relative;
         }
-        .radio-indicator { 
-            width: 18px; 
-            height: 18px; 
-            border: 2px solid #5257de; 
-            border-radius: 50%; 
-            margin-right: 12px; 
+
+        .step.active {
+            display: block;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-title {
+            font-size: clamp(18px, 4vw, 24px);
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            line-height: 1.3;
+            hyphens: auto;
+        }
+
+        .radio-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 12px;
+        }
+
+        .radio-wrapper.step1,
+        .radio-wrapper.step2 {
+            grid-template-columns: 1fr;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: flex-start;
+            background: #f5f5f5;
+            padding: 12px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            border: 1px solid transparent;
+            min-height: 20px;
+        }
+
+        .radio-item:hover {
+            background: #f0f0f0;
+            border-color: rgba(82, 87, 222, 0.2);
+        }
+
+        .radio-item input[type="radio"] {
+            display: none;
+            margin-top: 2px;
+        }
+
+        .radio-indicator {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #5257de;
+            border-radius: 50%;
+            margin-right: 12px;
             position: relative;
             flex-shrink: 0;
+            transition: all 0.2s;
+            margin-top: 1px;
         }
-        .radio-indicator:after { 
-            content: ''; 
-            width: 8px; 
-            height: 8px; 
-            background: #5257de; 
-            border-radius: 50%; 
-            position: absolute; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            opacity: 0; 
-            transition: opacity 0.2s; 
+
+        .radio-indicator:after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #5257de;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.2s;
         }
-        .radio-item input:checked + .radio-indicator:after { opacity: 1; }
-        input[type="text"], input[type="tel"] { 
-            width: 100%; 
-            padding: 12px; 
-            border: none; 
-            background: #f5f5f5; 
-            border-radius: 4px; 
+
+        .radio-item input:checked~.radio-indicator {
+            background: #5257de;
+        }
+
+        .radio-item input:checked~.radio-indicator:after {
+            opacity: 1;
+        }
+
+        .radio-item span:last-child {
+            margin-left: auto;
+            flex: 1;
+            padding-left: 8px;
+        }
+
+        input[type="text"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 4px;
             box-sizing: border-box;
             font-size: 16px;
+            outline: none;
+            transition: background 0.2s;
         }
-        .own-variant-input { display: none; width: 200px; margin-left: 10px; }
-        .radio-item input[value="Boshqa"]:checked + .radio-indicator ~ .own-variant-input { display: block; }
-        .contact-header { 
-            font-size: clamp(20px, 3vw, 36px); 
-            margin-bottom: 20px; 
+
+        input[type="text"]:focus,
+        input[type="tel"]:focus {
+            background: #fff;
+        }
+
+        .own-variant-input {
+            display: none;
+            width: auto;
+            margin-left: 8px;
+            background: #fff;
+            border: 1px solid #ddd;
+            flex: 1;
+        }
+
+        .radio-item:has(input[value="Boshqa"]:checked) .own-variant-input {
+            display: block;
+        }
+
+        .contact-header {
+            font-size: clamp(20px, 5vw, 36px);
+            margin-bottom: 30px;
             text-align: center;
+            font-weight: 600;
+            color: #333;
         }
-        .btn-wrapper { 
-            display: flex; 
-            justify-content: space-between; 
-            padding: 20px; 
-            background: rgba(255,255,255,0.95);
+
+        .contact-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .phone-wrapper {
+            position: relative;
+        }
+
+        .phone-flag {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            z-index: 2;
+            color: #27ae60;
+        }
+
+        input[name="phone"] {
+            padding-left: 50px;
+        }
+
+        .btn-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: white;
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
+            border-top: 1px solid #f0f0f0;
+            font-size: 14px;
         }
-        .btn { 
-            padding: 12px 24px; 
-            border: none; 
-            border-radius: 4px; 
-            cursor: pointer; 
+
+        .counter {
+            font-size: 12px;
+            color: #999;
+            font-weight: 400;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
             transition: all 0.2s ease-in-out;
-            font-size: 16px;
+            font-size: 14px;
+            font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
+            height: 36px;
         }
-        .btn-prev { 
-            background: #dddfff; 
-            color: #7579ed; 
-            border: 1px solid #dddfff; 
+
+        .btn-prev {
+            background: transparent;
+            color: #7579ed;
+            border: 1px solid #dddfff;
         }
-        .btn-next, .btn-submit { 
-            background: linear-gradient(0.249turn, rgba(134,137,242,1) 0%, rgba(82,87,222,1) 100%); 
-            color: white; 
+
+        .btn-next,
+        .btn-submit {
+            background: linear-gradient(135deg, #8689f2 0%, #5257de 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(82, 87, 222, 0.3);
         }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .error { color: red; font-size: 14px; margin-top: 5px; display: none; }
-        .success { 
-            display: none; 
-            text-align: center; 
-            padding: 40px; 
-            font-size: 18px; 
-            color: green;
+
+        .btn-submit {
+            font-weight: 600;
         }
-        .counter { 
-            font-size: 12px; 
-            color: #666; 
-            margin-bottom: 10px; 
-            text-align: right;
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        @media (max-width: 640px) { 
-            body { padding: 20px 10px; }
-            .quiz-container { height: auto; min-height: 500px; border-radius: 0; }
-            .step { height: auto; padding: 15px; }
-            .btn-wrapper { position: relative; background: white; border-top: 1px solid #eee; }
-            .radio-item { padding: 10px; }
+
+        .error {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .success {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 0;
+        }
+
+        .success-bar {
+            background: #27ae60;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 0;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 0;
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .success .btn-wrapper {
+            display: none;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 20px 10px;
+            }
+
+            .quiz-container {
+                height: auto;
+                min-height: 500px;
+                border-radius: 0;
+                margin: 0;
+                box-shadow: none;
+                border: none;
+            }
+
+            .step {
+                height: auto;
+                padding: 20px 15px 0;
+            }
+
+            .radio-wrapper {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .radio-wrapper.step1 {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-wrapper {
+                position: relative;
+                padding: 16px;
+                justify-content: space-between;
+            }
+
+            .radio-item {
+                padding: 10px 12px;
+            }
+
+            .input-title {
+                font-size: 18px;
+                line-height: 1.2;
+            }
+
+            .contact-header {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="quiz-container">
         <div class="progress-bar">
             <div class="progress" id="progress"></div>
         </div>
-        
+
         <!-- 1-bosqich: Yaxshilash -->
         <div class="step active" data-step="1">
-            <div class="counter" id="counter1">1-qadam / 5</div>
             <div class="input-group">
-                <div class="input-title">Nutqingizda yaxshilashni <br> xohlaydigan jihatlar <br> bormi?</div>
-                <div class="radio-wrapper">
+                <div class="input-title">Nutqingizda yaxshilashni<br>xohlaydigan jihatlar<br>bormi?</div>
+                <div class="radio-wrapper step1">
                     <label class="radio-item">
                         <input type="radio" name="yaxshilash" value="Bor" required>
                         <span class="radio-indicator"></span>
@@ -189,19 +396,17 @@
             </div>
         </div>
 
-        <!-- 2-bosqich: Jihatlar (faqat "Bor" uchun) -->
+        <!-- 2-bosqich: Jihatlar -->
         <div class="step" data-step="2">
-            <div class="counter" id="counter2">2-qadam / 5</div>
             <div class="input-group">
-                <div class="input-title">Nutqingizdagi qaysi jihatlarni yaxshilamoqchisiz?</div>
-                <input style="outline: none;" type="text" name="jihatlar" id="jihatlar" required placeholder="Yozing...">
+                <div class="input-title">Nutqingizdagi qaysi<br>jihatlarni<br>yaxshilamoqchisiz?</div>
+                <input type="text" name="jihatlar" id="jihatlar" required placeholder="Yozing...">
                 <div class="error" id="error2">Bu maydonni to'ldiring</div>
             </div>
         </div>
 
         <!-- 3-bosqich: Faoliyat -->
         <div class="step" data-step="3">
-            <div class="counter" id="counter3">3-qadam / 5</div>
             <div class="input-group">
                 <div class="input-title">Faoliyat yo'nalishingiz?</div>
                 <div class="radio-wrapper">
@@ -253,22 +458,33 @@
 
         <!-- 4-bosqich: Viloyat -->
         <div class="step" data-step="4">
-            <div class="counter" id="counter4">4-qadam / 5</div>
             <div class="input-group">
-                <div class="input-title">Qaysi viloyatdan murojaat qilyapsiz?</div>
+                <div class="input-title">Qaysi viloyatdan<br>murojaat qilyapsiz?</div>
                 <div class="radio-wrapper">
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Andijon" required><span class="radio-indicator"></span><span>Andijon</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Buxoro" required><span class="radio-indicator"></span><span>Buxoro</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Jizzax" required><span class="radio-indicator"></span><span>Jizzax</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Qashqadaryo" required><span class="radio-indicator"></span><span>Qashqadaryo</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Navoiy" required><span class="radio-indicator"></span><span>Navoiy</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Namangan" required><span class="radio-indicator"></span><span>Namangan</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Samarqand" required><span class="radio-indicator"></span><span>Samarqand</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Sirdaryo" required><span class="radio-indicator"></span><span>Sirdaryo</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Surxondaryo" required><span class="radio-indicator"></span><span>Surxondaryo</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Toshkent" required><span class="radio-indicator"></span><span>Toshkent</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Fargʻona" required><span class="radio-indicator"></span><span>Fargʻona</span></label>
-                    <label class="radio-item"><input type="radio" name="viloyat" value="Xorazm" required><span class="radio-indicator"></span><span>Xorazm</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Andijon" required><span
+                            class="radio-indicator"></span><span>Andijon</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Buxoro" required><span
+                            class="radio-indicator"></span><span>Buxoro</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Jizzax" required><span
+                            class="radio-indicator"></span><span>Jizzax</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Qashqadaryo" required><span
+                            class="radio-indicator"></span><span>Qashqadaryo</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Navoiy" required><span
+                            class="radio-indicator"></span><span>Navoiy</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Namangan" required><span
+                            class="radio-indicator"></span><span>Namangan</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Samarqand" required><span
+                            class="radio-indicator"></span><span>Samarqand</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Sirdaryo" required><span
+                            class="radio-indicator"></span><span>Sirdaryo</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Surxondaryo" required><span
+                            class="radio-indicator"></span><span>Surxondaryo</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Toshkent" required><span
+                            class="radio-indicator"></span><span>Toshkent</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Fargʻona" required><span
+                            class="radio-indicator"></span><span>Fargʻona</span></label>
+                    <label class="radio-item"><input type="radio" name="viloyat" value="Xorazm" required><span
+                            class="radio-indicator"></span><span>Xorazm</span></label>
                 </div>
                 <div class="error" id="error4">Bu maydonni to'ldiring</div>
             </div>
@@ -276,27 +492,28 @@
 
         <!-- 5-bosqich: Kontakt -->
         <div class="step" data-step="5">
-            <div class="counter" id="counter5">5-qadam / 5</div>
             <div class="input-group">
                 <div class="contact-header">Ma'lumotlaringizni qoldiring</div>
-                <div class="input-group">
-                    <div class="input-title">Ismingiz</div>
-                    <input type="text" name="name" required placeholder="Ismingizni kiriting">
-                    <div class="error" id="error-name">Ism faqat harflardan iborat bo'lishi kerak</div>
-                </div>
-                <div class="input-group">
-                    <div class="input-title">Telefon raqamingiz</div>
-                    <input type="tel" name="phone" id="phone" required placeholder="+998 (xx) xxx-xx-xx">
-                    <div class="error" id="error-phone">To'g'ri telefon raqam kiriting</div>
+                <div class="contact-inputs">
+                    <div class="input-group">
+                        <div class="input-title">Ismingiz</div>
+                        <input type="text" name="name" required placeholder="Ismingizni kiriting">
+                        <div class="error" id="error-name">Ism faqat harflardan iborat bo'lishi kerak</div>
+                    </div>
+                    <div class="input-group phone-wrapper">
+                        <div class="input-title">Telefon raqamingiz</div>
+                        <input type="tel" name="phone" id="phone" required placeholder="+998 00-000-00-00">
+                        <div class="error" id="error-phone">To'g'ri telefon raqam kiriting</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Success -->
-        <div class="step success active" id="success-step" style="display: none;">
-            <div style="padding: 40px; text-align: center; background-color: green;">
-                <div style="font-size: 18px; color: white; margin-bottom: 20px;">Malumotlaringiz muvaffaqiyatli qabul qilindi!</div>
-            </div>
+        <div class="success" id="success-step">
+            <div class="success-bar">Malumotlaringiz muvaffaqiyatli qabul qilindi!</div>
+            <button type="button" class="btn btn-next" onclick="resetForm()"
+                style="background: #27ae60; box-shadow: none; margin-top: 20px;">Qayta boshlash</button>
         </div>
 
         <form id="quiz-form">
@@ -304,11 +521,12 @@
                 <button type="button" class="btn btn-prev" id="btn-prev" onclick="prevStep()" style="display: none;">
                     ← Orqaga
                 </button>
+                <div class="counter" id="counter">1/5</div>
                 <button type="button" class="btn btn-next" id="btn-next" onclick="nextStep()">
                     Keyingisi →
                 </button>
                 <button type="submit" class="btn btn-submit" id="btn-submit" style="display: none;">
-                    Yuborish
+                    Отправить
                 </button>
             </div>
         </form>
@@ -324,13 +542,12 @@
         const btnNext = document.getElementById('btn-next');
         const btnSubmit = document.getElementById('btn-submit');
         const successStep = document.getElementById('success-step');
+        const counter = document.getElementById('counter');
 
         function updateProgress() {
             const percent = ((currentStep - 1) / (totalSteps - 1)) * 100;
             progress.style.width = percent + '%';
-            document.querySelectorAll('.counter').forEach((counter, index) => {
-                if (index + 1 === currentStep) counter.textContent = `${currentStep}-qadam / ${totalSteps}`;
-            });
+            counter.textContent = `${currentStep}/5`;
         }
 
         function showStep(stepNum) {
@@ -340,8 +557,6 @@
             btnNext.style.display = stepNum < totalSteps ? 'flex' : 'none';
             btnSubmit.style.display = stepNum === totalSteps ? 'flex' : 'none';
             updateProgress();
-            // Scroll to top if needed
-            window.scrollTo(0, 0);
         }
 
         function validateStep(stepNum) {
@@ -350,41 +565,40 @@
             errors.forEach(e => e.style.display = 'none');
             let valid = true;
 
-            // Required fields
             const requireds = step.querySelectorAll('[required]');
             requireds.forEach(input => {
                 if (!input.value.trim()) {
                     valid = false;
-                    const error = input.closest('.input-group').querySelector('.error');
-                    if (error) {
+                    let error = input.nextElementSibling;
+                    if (error && error.classList.contains('error')) {
                         error.style.display = 'block';
                         error.textContent = 'Bu maydonni to\'ldiring';
                     }
                 }
             });
 
-            // Name validation (only letters)
             if (stepNum === 5) {
                 const name = document.querySelector('[name="name"]').value;
                 if (name && !/^[a-zA-Z\u0400-\u04FF\s]+$/.test(name)) {
                     valid = false;
                     document.getElementById('error-name').style.display = 'block';
                 }
-                // Phone validation
-                const phone = document.getElementById('phone').value;
-                if (phone && !/^(\+998|998)?[\s-]?\(?[0-9]{2}\)?[\s-]?[0-9]{3}[\s-]?[0-9]{2}[\s-]?[0-9]{2}$/.test(phone.replace(/\s/g, ''))) {
+                const phone = document.getElementById('phone').value.replace(/\D/g, '');
+                if (phone.length !== 12 || !phone.startsWith('998')) {
                     valid = false;
                     document.getElementById('error-phone').style.display = 'block';
                 }
             }
 
-            // Faoliyat other
             if (stepNum === 3) {
                 const otherRadio = document.querySelector('input[name="faoliyat"][value="Boshqa"]:checked');
-                if (otherRadio && !otherRadio.nextElementSibling.nextElementSibling.value.trim()) {
-                    valid = false;
-                    document.getElementById('error3').style.display = 'block';
-                    document.getElementById('error3').textContent = 'Boshqa variantni kiriting';
+                if (otherRadio) {
+                    const otherInput = otherRadio.parentElement.querySelector('.own-variant-input');
+                    if (otherInput && !otherInput.value.trim()) {
+                        valid = false;
+                        document.getElementById('error3').style.display = 'block';
+                        document.getElementById('error3').textContent = 'Boshqa variantni kiriting';
+                    }
                 }
             }
 
@@ -393,14 +607,9 @@
 
         function nextStep() {
             if (validateStep(currentStep)) {
-                // Conditional for step 1
                 if (currentStep === 1) {
                     const selected = document.querySelector('input[name="yaxshilash"]:checked')?.value;
-                    if (selected !== 'Bor') {
-                        currentStep = 3; // Skip step 2
-                    } else {
-                        currentStep = 2;
-                    }
+                    currentStep = selected === 'Bor' ? 2 : 3;
                 } else {
                     currentStep++;
                 }
@@ -410,43 +619,35 @@
 
         function prevStep() {
             if (currentStep === 3 && document.querySelector('input[name="yaxshilash"]:checked')?.value === 'Bor') {
-                currentStep = 2; // Go back to step 2 if "Bor" was selected
+                currentStep = 2;
+            } else if (currentStep === 2 && document.querySelector('input[name="yaxshilash"]:checked')?.value !== 'Bor') {
+                currentStep = 1;
             } else {
                 currentStep--;
             }
             showStep(currentStep);
         }
 
-        // Phone mask for UZ
-        document.getElementById('phone').addEventListener('input', function(e) {
+        document.getElementById('phone').addEventListener('input', function (e) {
             let val = e.target.value.replace(/\D/g, '');
-            let formatted = '';
-            if (val.length >= 1) {
-                if (val.startsWith('998')) {
-                    val = val.substring(3);
-                }
-                if (val.length > 9) val = val.substring(0, 9);
-                formatted = '+998 ';
-                if (val.length >= 1) formatted += '(' + val.substring(0, 2) + ') ';
-                if (val.length >= 3) formatted += val.substring(2, 5) + ' ';
-                if (val.length >= 5) formatted += val.substring(5, 7) + ' ';
-                if (val.length >= 7) formatted += val.substring(7, 9);
-            }
+            if (val.startsWith('998')) val = val.substring(3);
+            if (val.length > 9) val = val.substring(0, 9);
+            let formatted = '+998 ';
+            if (val.length > 0) formatted += val.substring(0, 2) + '-';
+            if (val.length > 2) formatted += val.substring(2, 5) + '-';
+            if (val.length > 4) formatted += val.substring(5, 7) + '-';
+            if (val.length > 6) formatted += val.substring(7, 9);
             e.target.value = formatted;
         });
 
-        // Form submit
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (e) {
             e.preventDefault();
             if (validateStep(totalSteps)) {
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData);
-                // Simulate submission (o'zing backend URL ni qo'y: fetch('https://your-backend.com/submit', {method: 'POST', body: formData}))
                 console.log('Yuborilgan ma\'lumotlar:', data);
-                // Original link ga bog'lash uchun: window.open('https://najotnurtelegram.tilda.ws/forma', '_blank'); yoki redirect
                 steps.forEach(s => s.classList.remove('active'));
-                successStep.style.display = 'block';
-                successStep.classList.add('active');
+                successStep.style.display = 'flex';
                 form.reset();
             }
         });
@@ -454,35 +655,28 @@
         function resetForm() {
             currentStep = 1;
             successStep.style.display = 'none';
-            successStep.classList.remove('active');
             showStep(1);
             form.reset();
         }
 
-        // Initial load animation
-        setTimeout(() => {
-            document.body.style.opacity = '1';
-        }, 100);
-
-        // Radio indicators
-        document.addEventListener('change', function(e) {
+        document.addEventListener('change', function (e) {
             if (e.target.type === 'radio') {
-                // Update indicators
-                const wrapper = e.target.closest('.radio-wrapper');
-                wrapper.querySelectorAll('.radio-indicator').forEach(ind => {
-                    ind.style.opacity = '0';
-                });
+                const items = e.target.closest('.radio-wrapper').querySelectorAll('.radio-item');
+                items.forEach(item => item.style.borderColor = 'transparent');
                 if (e.target.checked) {
-                    e.target.parentElement.querySelector('.radio-indicator').style.opacity = '1';
+                    e.target.closest('.radio-item').style.borderColor = '#5257de';
                 }
-                // Show/hide other input
                 if (e.target.value === 'Boshqa') {
-                    e.target.closest('.radio-item').querySelector('.own-variant-input').style.display = 'block';
+                    const otherInput = e.target.closest('.radio-item').querySelector('.own-variant-input');
+                    otherInput.style.display = e.target.checked ? 'block' : 'none';
                 }
             }
         });
 
+        setTimeout(() => document.body.classList.add('loaded'), 1500);
+
         showStep(1);
     </script>
 </body>
+
 </html>
